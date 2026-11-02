@@ -1,0 +1,12 @@
+# Bundle patch: the one Host row this bundle contributes.
+# The row name must stay equal to the package name in package.json, or the row
+# fails to import and the Plugins page reports a failed enable.
+- insert:
+    - id: commandcode-plan-usage
+      name: 'dsh-commandcode-plan-usage'
+      # Optional overrides, all defaulted in index.js:
+      # config:
+      #   apiBase: 'https://api.commandcode.ai'
+      #   apiKeyEnv: 'COMMANDCODE_API_KEY'
+      #   timeoutMs: 12000
+      #   refreshMinutes: 5
