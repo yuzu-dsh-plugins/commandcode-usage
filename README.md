@@ -1,71 +1,89 @@
-# dsh-commandcode-plan-usage
+# Command Code Usage
 
-Command Code（[commandcode.ai](https://commandcode.ai)）套餐用量，常驻在 DSH 侧边栏底部、设置入口旁。
+**English** · [简体中文](./README.zh-CN.md)
 
-A Command Code plan-usage row for DeepSeek Harness, pinned in the sidebar foot beside Settings.
+A [Command Code](https://commandcode.ai) plan usage indicator for DeepSeek
+Harness. It sits beside Settings at the bottom of the sidebar and shows usage
+for the 5-hour, weekly, and monthly billing windows.
 
-## 显示内容 · What it shows
+## What it shows
 
-侧边栏底部一行（`sidebar.footer.action` 槽位，设置行旁）：
-
-```
-[Command Code 标志]   5h 5%   周 8%   月 40%
-```
-
-- 图标是 Command Code 官方标志（见下方「第三方素材」），不显示「Command Code」文案，品牌名只留在 `title` 与 `aria-label`；
-- 行高 42px、`margin:0 -2px` + `padding:0 10px 0 8px`、圆角 12px、字号 14px —— 与同一槽位的官方行（`@deepseek-ai/dsh-client-ui-cordis` 的 CordisPanel）逐项一致，标志与数字因此和相邻行的图标/文字列对齐；
-- hover 与展开（`aria-expanded="true"`）共用底色 `--dsw-alias-interactive-bg-hover`；
-- 三个占比按阈值着色（<60% 绿 / ≥60% 黄 / ≥85% 红）；
-- **首次取数**期间行内显示「加载中…」（次要色）；拿到数据后显示数字。**之后的每 5 分钟后台刷新不显示任何 loading**，始终保留上一份数字；只有「取数失败且没有旧数据」时才显示「不可用」（导轨形态则是红色状态点）；
-- 侧栏收起成 56px 导轨时变成 36×36 圆形按钮，只留标志，占比取三者最大值画成右上角 6px 状态点，精确数字进 `title` 与 `aria-label`；
-- 单击展开详情面板（贴合该行左缘向上弹出，跟随窗口 resize；面板用宿主的菜单表面 `--dsw-specific-menu` + `--dsw-elevation-prominent` + 12px 圆角）：三个窗口的金额、进度条、重置时间，套餐 ID / 订阅状态 / 计费周期结束时间，账号、请求数、成功率、更新时间；Esc 或点击别处关闭；
-- 每 5 分钟自动刷新（`config.refreshMinutes`），面板打开与窗口重新可见时立即刷新。
-
-## 安装 · Install
-
-**方式一：把本目录装进当前 profile（推荐）**
-
-用 DSH 的插件管理安装本目录：让 agent 执行「把 `<本目录绝对路径>` 装进当前 profile」，或在「设置 → 插件」页用安装入口选择本目录。
-安装会做两件事：把 `dsh-commandcode-plan-usage` 写进 profile 的 `dsh.profile.bundles`，并让 profile 的 `node_modules` 以**软链**指向本目录——所以源码即安装产物，改完刷新页面即可生效，不需要构建。
-
-**方式二：发布到 npm 之后**
-
-用插件页/插件市场的安装入口按包名 `dsh-commandcode-plan-usage` 安装。
-
-**方式三：手动（仅开发调试）**
-
-```bash
-ln -sfn /绝对路径/dsh-commandcode-plan-usage ~/.dsh/profiles/<profile>/node_modules/dsh-commandcode-plan-usage
+```text
+[Command Code logo]   5h 5%   Wk 8%   Mo 40%
 ```
 
-并在 `~/.dsh/profiles/<profile>/package.json` 的 `dsh.profile.bundles` 里加上 `dsh-commandcode-plan-usage`。
+- The row uses the `sidebar.footer.action` slot and matches the host's sidebar
+  styling. It shows the Command Code logo. The brand name appears in the
+  tooltip and accessible label.
+- Usage below 60% is green, 60% up to but excluding 85% is yellow, and 85%
+  or more is red.
+- The first request shows a loading indicator. Later refreshes keep the most
+  recent reading visible. The row shows “Unavailable” if a request fails and
+  no previous reading is available.
+- In the collapsed sidebar, the button shows the logo and a status dot colored
+  by the highest usage percentage. The exact values remain in the tooltip and
+  accessible label.
+- Click the row to see amounts, progress bars, reset times, plan and
+  subscription status, billing period end, account, request count, success
+  rate, and last update. Press `Esc` or click outside to close the panel.
+- Usage refreshes every five minutes by default, when you open the panel, and
+  when the window becomes visible again.
 
-安装后如需自定义，按下面「配置」在 profile 的 `cordis.patch.yml` 覆盖该行。
+## Installation
 
-## 数据来源 · Data
+```sh
+git clone https://github.com/yuzu-dsh-plugins/commandcode-usage.git
+```
 
-Host 半每次请求时解析凭据并调用 Command Code 账号接口：
+Install the cloned directory as a local bundle in the DSH plugin manager. If
+your session exposes the `plugin_manager` tool, run `install_bundle` with the
+directory's absolute path. The bundle is registered as
+`dsh-commandcode-plan-usage`.
 
-| 端点 | 用途 |
+The profile adds that name to `dsh.profile.bundles` and links to the local
+directory. The browser client runs directly from `client.js`.
+
+For manual development setup, link the clone into the active profile. Replace
+the example paths with your actual checkout path and profile name.
+
+```sh
+ln -sfn "/absolute/path/to/commandcode-usage" "$HOME/.dsh/profiles/desktop/node_modules/dsh-commandcode-plan-usage"
+```
+
+Then add `dsh-commandcode-plan-usage` to `dsh.profile.bundles` in the profile's
+`package.json`.
+
+## Data sources and credentials
+
+The host resolves a credential on each request and reads the following Command
+Code account endpoints.
+
+| Endpoint | Data |
 |---|---|
-| `/alpha/whoami` | 账号 |
-| `/alpha/usage/summary` | 本计费周期花费、请求数、成功率、Token |
-| `/alpha/billing/credits` | 5 小时 / 每周窗口、剩余月额度 |
-| `/alpha/billing/subscriptions` | 套餐、订阅状态、计费周期 |
+| `/alpha/whoami` | Account identity |
+| `/alpha/usage/summary` | Billing period spend, requests, success rate, and tokens |
+| `/alpha/billing/credits` | 5-hour and weekly windows, and remaining monthly allowance |
+| `/alpha/billing/subscriptions` | Plan, subscription status, and billing period |
 
-月额度分母按官网口径推算：`本期已用 + 剩余月额度`（不写死套餐表，套餐变更后自动跟随）。
+The monthly allowance is calculated as current period spend plus the remaining
+monthly allowance reported by the API.
 
-凭据解析顺序：
+The host looks for a key in this order.
 
-1. 插件 `config.apiKey`
-2. `ctx.credentials` 解析 `config.apiKeyEnv`（默认 `COMMANDCODE_API_KEY`，即 `$DSH_HOME/.credentials.yaml` → 进程环境 → `.env`）
-3. `~/.commandcode/auth.json`（Command Code CLI 登录态）
+1. The plugin's `config.apiKey`.
+2. The DSH credential resolver for `config.apiKeyEnv`, which defaults to
+   `COMMANDCODE_API_KEY`.
+3. The process environment variable named by `config.apiKeyEnv`.
+4. The Command Code CLI sign-in file at `~/.commandcode/auth.json`.
 
-API Key 只留在 Host 进程里；浏览器半通过 `GET /api/commandcode-plan/usage` 取已归一化的数据，响应带 `cache-control: no-store`。
+The API key stays in the host process. The browser reads normalized usage from
+the authenticated `GET /api/commandcode-plan/usage` route. The response uses
+`Cache-Control: no-store`.
 
-## 配置 · Configuration
+## Configuration
 
-在 profile 的 `cordis.patch.yml` 覆盖该行即可：
+Override the bundle row in your profile's `cordis.patch.yml`. The values below
+are the defaults.
 
 ```yaml
 - id: commandcode-plan-usage
@@ -77,46 +95,47 @@ API Key 只留在 Host 进程里；浏览器半通过 `GET /api/commandcode-plan
     refreshMinutes: 5
 ```
 
-## Agent 工具 · Agent tool
+## Agent tool
 
-同一份读取也注册为模型工具，让对话里可以直接问用量：
+When DSH exposes its tool registry, the plugin registers
+`commandcode_usage`. The tool can return the same usage report, including
+account information, to the model. For example, ask:
 
-```
-查一下我的 Command Code 用量
-```
-
-## 兼容性与已知风险 · Compatibility and caveats
-
-- 用的是 Command Code **未公开**的 `/alpha/*` 账号端点（CLI 自身同款）。官方一旦改动，插件会失效：此时行内显示「不可用」，面板给出具体原因（缺凭据 / 请求失败 / 传输失败），不会崩。
-- 请求头 `x-command-code-version`、`x-cli-environment` 是账号 API 认的客户端标识，不是本插件的版本。
-- 已在 DSH `0.2.1-rc.2`（desktop profile、macOS）上验证。
-- 刻意不声明 `engines.dsh`：DSH 目前是预发布版本号（如 `0.2.1-rc.2`），semver 区间会把预发布版判为不满足，反而挡住安装。
-- 用量来自你的账号：面板会显示账号名/邮箱，`commandcode_usage` 工具也会把同一份数据交给模型；如需换成别的 key，改 `config.apiKeyEnv`。
-
-## 第三方素材 · Third-party artwork
-
-- `client.js` 中的 Command Code 标志取自 Command Code 官方 VS Code 扩展的 `icons/icon-dark.svg`（144×144 图形），仅用于标识所测量的服务。该标志的版权与商标归 Command Code 所有，**不在本项目的 MIT 许可范围内**。
-- `icon.svg`（插件列表里的图标）是本项目的原创图形，随 MIT 发布。
-
-## 目录结构 · Layout
-
-```
-index.js          Host 半：/api 路由、commandcode_usage 工具、四端点归一化
-client.js         浏览器半：sidebar.footer.action 行 + 详情面板
-cordis.patch.yml  bundle patch（一行 Host 插件）
-locale/en.json    插件标题/描述（插件页与设置页读取）
-locale/zh.json
-icon.svg          插件列表图标（原创）
+```text
+Check my Command Code usage.
 ```
 
-## 开发 · Development
+## Compatibility
 
-源码即安装目录（profile 以软链引用），改完在插件页重载插件树或刷新页面即可，无需构建步骤：
+- The plugin uses undocumented Command Code `/alpha/*` endpoints. Changes to
+  those endpoints may affect availability or the reported values. The panel
+  displays errors for missing credentials or failed requests.
+- The request headers `x-command-code-version` and `x-cli-environment`
+  identify the client to the Command Code API.
+- The original plugin was tested on macOS with the DSH `0.2.1-rc.2` desktop
+  profile. The manifest omits `engines.dsh` so that a version range does not
+  exclude prerelease builds.
 
-- `index.js` — Host 半：认证路由 + agent 工具 + 数据归一化，不缓存，每次调用重新解析凭据；
-- `client.js` — 浏览器半：`sidebar.footer.action` 行与详情面板；只依赖 `react` 与宿主的 `--dsw-*` 主题 token，不 import 任何 Harness Client 包；
-- 两半的失败码通过 `ERROR_KEYS` 映射到词典 key，新增失败码时两边一起改。
+## Development
 
-## License
+The profile links to the checkout. After an edit, reload the plugin tree or
+refresh the page to load the changed code. There is no build step.
 
-MIT，见 [LICENSE](./LICENSE)。Command Code 标志除外（见「第三方素材」）。
+| File | Role |
+|---|---|
+| `index.js` | Host route, agent tool, credential resolution, and normalization for the four endpoints |
+| `client.js` | Sidebar row and detail panel using host React and `--dsw-*` theme tokens |
+| `cordis.patch.yml` | Bundle patch registering the host plugin |
+| `locale/en.json`, `locale/zh.json` | Plugin name and description in the DSH interface |
+| `icon.svg` | Original icon for the plugin list |
+
+When adding error codes, update the client mapping in `ERROR_KEYS` alongside
+the host.
+
+## Artwork and license
+
+The project is released under the [MIT License](./LICENSE). The original
+`icon.svg` is covered by that license. The Command Code mark in `client.js`
+comes from `icons/icon-dark.svg` in the official Command Code VS Code extension
+and identifies the service. The mark remains the property of Command Code and
+is excluded from the project's MIT license.
