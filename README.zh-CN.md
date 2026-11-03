@@ -23,11 +23,27 @@
 
 ## 安装
 
+### 从 GitHub 安装
+
+在 DeepSeek Harness 侧栏打开 **插件 → 添加插件**，将下面的地址粘贴到安装输入框。
+
+```text
+git+https://github.com/yuzu-dsh-plugins/commandcode-usage.git
+```
+
+点击 **安装**，完成后选择 **立即启用**。如果安装界面提示重启，请重启 DeepSeek Harness。
+
+启用后，用量行会出现在设置入口旁。请先在同一台机器上登录 Command Code CLI，或配置 `COMMANDCODE_API_KEY`，详见[数据来源与凭据](#数据来源与凭据)。
+
+### 从本地目录安装
+
+在 GitHub 仓库页面选择 **Code → Download ZIP** 并解压，也可以用下面的命令克隆仓库。
+
 ```sh
 git clone https://github.com/yuzu-dsh-plugins/commandcode-usage.git
 ```
 
-在 DSH 插件管理器中，将克隆下来的目录安装为本地 bundle。如果当前会话提供
+打开 **添加插件**，输入解压或克隆后目录的绝对路径。如果当前会话提供
 `plugin_manager` 工具，可通过 `install_bundle` 指定该目录的绝对路径。
 注册的 bundle 名称为 `dsh-commandcode-plan-usage`。
 
